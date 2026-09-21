@@ -51,6 +51,11 @@
 <div class="stat"><span class="muted">Trades</span><b id="tradeCount">0</b></div>
 <div class="stat"><span class="muted">Levels Left</span><b id="levelsLeft">5</b></div>
 </div>
+<div class="stats" style="margin-top:7px">
+<div class="stat"><span class="muted">Wins</span><b id="winCount">0</b></div>
+<div class="stat"><span class="muted">Losses</span><b id="lossCount">0</b></div>
+<div class="stat"><span class="muted">Win Rate</span><b id="winRate">0%</b></div>
+</div>
 <div class="actions">
 <button class="win" id="win">✓ WIN</button>
 <button class="loss" id="loss">✕ LOSS</button>
@@ -74,6 +79,7 @@
 <script>
 const levels=[1,3,6,12,25];
 let balance=3000, level=0, trade=0, history=[];
+let wins = 0, losses = 0;
 const $=id=>document.getElementById(id);
 const money=n=>'₹'+Number(n).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
 function render(){
@@ -86,6 +92,9 @@ function render(){
   $('totalPL').textContent=(totalPL>=0?'+':'')+money(totalPL);
   $('totalPL').className=totalPL>=0?'plpos':'plneg';
   $('tradeCount').textContent=trade;
+  $('winCount').textContent=wins;
+  $('lossCount').textContent=losses;
+  $('winRate').textContent=trade ? Math.round(wins/trade*100)+'%' : '0%';
   $('levelsLeft').textContent=5-level;
   $('levels').innerHTML=levels.map((p,i)=>`<div class="level ${i===level?'active':''}">L${i+1}<b>${p}%</b></div>`).join('');
   $('history').innerHTML=history.map(h=>`<tr><td>${h.t}</td><td>L${h.l}</td><td>${money(h.start)}</td><td>${money(h.stake)}</td><td>${h.result}</td><td>${money(h.end)}</td><td>${money(h.next)}</td></tr>`).join('');
