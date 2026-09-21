@@ -103,7 +103,8 @@ function apply(result){
   const payout=Math.max(0,Number($('payout').value)||96), startBal=balance, stake=startBal*levels[level]/100;
   if(result==='WIN'){balance=startBal+stake*payout/100; level=0}
   else {balance=Math.max(0,startBal-stake); level=Math.min(4,level+1)}
-  trade++;
+  trade++; if(result === 'WIN') wins++;
+else losses++;
   history.unshift({t:trade,l:result==='WIN'?1:Math.min(5,level+1),start:startBal,stake,result,end:balance,next:balance*levels[level]/100});
   render();
 }
