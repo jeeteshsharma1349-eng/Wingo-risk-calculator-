@@ -17,7 +17,7 @@
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}.stat{border:1px solid #e5e7eb;border-radius:11px;padding:10px}.stat b{display:block;font-size:16px;margin-top:3px}
 .actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:13px}.actions button{height:45px;border:0;border-radius:11px;font-weight:800;font-size:13px}.win{background:#dcfce7;color:#166534}.loss{background:#fee2e2;color:#991b1b}.reset{background:#e5e7eb;color:#374151}
 .tablewrap{overflow:auto;border:1px solid #e5e7eb;border-radius:12px}.table{border-collapse:collapse;width:100%;min-width:650px;font-size:12px}.table th,.table td{padding:9px;border-bottom:1px solid #e5e7eb;text-align:right;white-space:nowrap}.table th:first-child,.table td:first-child{text-align:left}.table th{font-size:10px;color:#6b7280;background:#f9fafb}.table tr:last-child td{border:0}
-.note{font-size:12px;line-height:1.5;color:#6b7280;margin-top:9px}.install{background:#eef2ff;border-color:#c7d2fe}.install button{height:43px;border:0;border-radius:10px;background:#111827;color:#fff;font-weight:800;padding:0 15px}
+.note{font-size:12px;line-height:1.5;color:#6b7280;margin-top:9px}.install{background:#eef2ff;border-color:#c7d2fe}.install button{height:43px;border:0;border-radius:10px;background:#111827;color:#fff;font-weight:800;padding:0 15px}.plpos{color:#166534}.plneg{color:#991b1b}
 @media(max-width:480px){.grid{grid-template-columns:1fr}.actions{grid-template-columns:1fr 1fr}.reset{grid-column:1/-1}.stats{grid-template-columns:1fr 1fr 1fr}.big{font-size:30px}}
 </style>
 </head>
@@ -45,6 +45,11 @@
 <div class="stat"><span class="muted">Balance</span><b id="balance">₹3,000.00</b></div>
 <div class="stat"><span class="muted">If WIN</span><b id="winBal">₹3,028.80</b></div>
 <div class="stat"><span class="muted">If LOSS</span><b id="lossBal">₹2,970.00</b></div>
+</div>
+<div class="stats" style="margin-top:7px">
+<div class="stat"><span class="muted">Total P/L</span><b id="totalPL">₹0.00</b></div>
+<div class="stat"><span class="muted">Trades</span><b id="tradeCount">0</b></div>
+<div class="stat"><span class="muted">Levels Left</span><b id="levelsLeft">5</b></div>
 </div>
 <div class="actions">
 <button class="win" id="win">✓ WIN</button>
@@ -74,9 +79,14 @@ const money=n=>'₹'+Number(n).toLocaleString('en-IN',{minimumFractionDigits:2,m
 function render(){
   const payout=Math.max(0,Number($('payout').value)||96);
   const stake=balance*levels[level]/100, winBal=balance+stake*payout/100, lossBal=Math.max(0,balance-stake);
+  const totalPL=balance-Number($('start').value||3000);
   $('levelName').textContent=`Level ${level+1} — ${levels[level]}%`;
   $('stake').textContent=money(stake); $('balance').textContent=money(balance);
   $('winBal').textContent=money(winBal); $('lossBal').textContent=money(lossBal);
+  $('totalPL').textContent=(totalPL>=0?'+':'')+money(totalPL);
+  $('totalPL').className=totalPL>=0?'plpos':'plneg';
+  $('tradeCount').textContent=trade;
+  $('levelsLeft').textContent=5-level;
   $('levels').innerHTML=levels.map((p,i)=>`<div class="level ${i===level?'active':''}">L${i+1}<b>${p}%</b></div>`).join('');
   $('history').innerHTML=history.map(h=>`<tr><td>${h.t}</td><td>L${h.l}</td><td>${money(h.start)}</td><td>${money(h.stake)}</td><td>${h.result}</td><td>${money(h.end)}</td><td>${money(h.next)}</td></tr>`).join('');
 }
