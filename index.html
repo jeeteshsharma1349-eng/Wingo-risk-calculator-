@@ -15,7 +15,9 @@
 .levels{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.level{border:1px solid #e5e7eb;border-radius:10px;text-align:center;padding:8px 3px;font-size:11px}.level b{display:block;font-size:16px;margin-top:2px}.active{background:#111827;color:white;border-color:#111827}
 .label{font-size:12px;color:#6b7280;font-weight:700}.big{font-size:34px;font-weight:900;margin-top:2px}.muted{font-size:12px;color:#6b7280}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}.stat{border:1px solid #e5e7eb;border-radius:11px;padding:10px}.stat b{display:block;font-size:16px;margin-top:3px}
-.actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:13px}.actions button{height:45px;border:0;border-radius:11px;font-weight:800;font-size:13px}.win{background:#dcfce7;color:#166534}.loss{background:#fee2e2;color:#991b1b}.reset{background:#e5e7eb;color:#374151}
+.actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:13px}.actions button{height:45px;border:0;border-radius:11px;font-weight:800;font-size:13px}.win{background:#dcfce7;color:#166534}.loss{background:#fee2e2;color:#991b1b}.reset{background:#e5e7eb;color:#374151}.actions button:disabled{opacity:.45;cursor:not-allowed}
+.cooldown{display:none;margin-top:12px;border:1px solid #fecaca;background:#fef2f2;color:#991b1b;border-radius:13px;padding:13px;text-align:center}.cooldown.show{display:block}.cooldown strong{display:block;font-size:18px}.cooldown .timer{font-size:30px;font-weight:900;margin-top:2px}
+.ready{display:none;margin-top:12px;border:1px solid #bbf7d0;background:#f0fdf4;color:#166534;border-radius:13px;padding:10px;text-align:center;font-weight:800}.ready.show{display:block}
 .tablewrap{overflow:auto;border:1px solid #e5e7eb;border-radius:12px}.table{border-collapse:collapse;width:100%;min-width:650px;font-size:12px}.table th,.table td{padding:9px;border-bottom:1px solid #e5e7eb;text-align:right;white-space:nowrap}.table th:first-child,.table td:first-child{text-align:left}.table th{font-size:10px;color:#6b7280;background:#f9fafb}.table tr:last-child td{border:0}
 .note{font-size:12px;line-height:1.5;color:#6b7280;margin-top:9px}.install{background:#eef2ff;border-color:#c7d2fe}.install button{height:43px;border:0;border-radius:10px;background:#111827;color:#fff;font-weight:800;padding:0 15px}.plpos{color:#166534}.plneg{color:#991b1b}
 @media(max-width:480px){.grid{grid-template-columns:1fr}.actions{grid-template-columns:1fr 1fr}.reset{grid-column:1/-1}.stats{grid-template-columns:1fr 1fr 1fr}.big{font-size:30px}}
@@ -24,27 +26,19 @@
 <body>
 <main class="app">
 <header class="top"><h1>Wingo Risk Calculator</h1><p>Level-based stake & balance tracker</p></header>
-
-<section class="card">
-<div class="grid">
+<section class="card"><div class="grid">
 <div class="field"><label>Starting Balance (₹)</label><input id="start" type="number" min="1" value="3000"></div>
 <div class="field"><label>Payout (%)</label><input id="payout" type="number" min="0" value="96"></div>
-</div>
-</section>
-
-<section class="card">
-<div class="label" style="margin-bottom:8px">5 LEVEL SYSTEM</div>
-<div class="levels" id="levels"></div>
-</section>
-
+</div></section>
+<section class="card"><div class="label" style="margin-bottom:8px">5 LEVEL SYSTEM</div><div class="levels" id="levels"></div></section>
 <section class="card" aria-live="polite">
 <div class="muted">CURRENT LEVEL / NEXT STAKE</div>
-<div id="levelName" class="label" style="margin-top:4px">Level 1 — 1%</div>
-<div id="stake" class="big">₹30.00</div>
+<div id="levelName" class="label" style="margin-top:4px">Level 1 — 2%</div>
+<div id="stake" class="big">₹60.00</div>
 <div class="stats">
 <div class="stat"><span class="muted">Balance</span><b id="balance">₹3,000.00</b></div>
-<div class="stat"><span class="muted">If WIN</span><b id="winBal">₹3,028.80</b></div>
-<div class="stat"><span class="muted">If LOSS</span><b id="lossBal">₹2,970.00</b></div>
+<div class="stat"><span class="muted">If WIN</span><b id="winBal">₹3,057.60</b></div>
+<div class="stat"><span class="muted">If LOSS</span><b id="lossBal">₹2,940.00</b></div>
 </div>
 <div class="stats" style="margin-top:7px">
 <div class="stat"><span class="muted">Total P/L</span><b id="totalPL">₹0.00</b></div>
@@ -56,67 +50,48 @@
 <div class="stat"><span class="muted">Losses</span><b id="lossCount">0</b></div>
 <div class="stat"><span class="muted">Win Rate</span><b id="winRate">0%</b></div>
 </div>
-<div class="actions">
-<button class="win" id="win">✓ WIN</button>
-<button class="loss" id="loss">✕ LOSS</button>
-<button class="reset" id="reset">Reset</button>
-</div>
+<div class="actions"><button class="win" id="win">✓ WIN</button><button class="loss" id="loss">✕ LOSS</button><button class="reset" id="reset">Reset</button></div>
+<div id="cooldown" class="cooldown" aria-live="assertive"><strong>🔴 RED SIGNAL — TAKE A BREAK</strong>Do not trade for 5 minutes after this loss.<div class="timer" id="cooldownTimer">05:00</div></div>
+<div id="ready" class="ready" aria-live="polite">🟢 COOLDOWN COMPLETE — You can continue.</div>
 </section>
-
-<section class="card">
-<div class="label" style="margin-bottom:9px">TRADE HISTORY</div>
+<section class="card"><div class="label" style="margin-bottom:9px">TRADE HISTORY</div>
 <div class="tablewrap"><table class="table"><thead><tr><th>Trade</th><th>Level</th><th>Start</th><th>Stake</th><th>Result</th><th>End</th><th>Next</th></tr></thead><tbody id="history"></tbody></table></div>
-<div class="note">WIN resets to Level 1. LOSS moves to the next level. At Level 5, another LOSS keeps Level 5. This tool calculates stake sizes; it does not predict Wingo results.</div>
+<div class="note">WIN resets to Level 1. LOSS moves to the next level. Levels: 2% → 5% → 10% → 20% → 45%. After every LOSS, a 5-minute cooldown blocks WIN/LOSS buttons. This tool calculates stake sizes; it does not predict Wingo results.</div>
 </section>
-
-<section class="card install" id="installBox" hidden>
-<div class="label">INSTALL ON PHONE</div>
-<div class="note" style="color:#374151;margin-bottom:9px">Use the button below when your browser offers installation.</div>
-<button id="install">Install App</button>
-</section>
+<section class="card install" id="installBox" hidden><div class="label">INSTALL ON PHONE</div><div class="note" style="color:#374151;margin-bottom:9px">Use the button below when your browser offers installation.</div><button id="install">Install App</button></section>
 </main>
-
 <script>
-const levels=[1,3,6,12,25];
-let balance=3000, level=0, trade=0, history=[];
-let wins = 0, losses = 0;
+const levels=[2,5,10,20,45];
+let balance=3000,level=0,trade=0,history=[],wins=0,losses=0,cooldownUntil=0,cooldownInterval=null;
 const $=id=>document.getElementById(id);
 const money=n=>'₹'+Number(n).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
 function render(){
-  const payout=Math.max(0,Number($('payout').value)||96);
-  const stake=balance*levels[level]/100, winBal=balance+stake*payout/100, lossBal=Math.max(0,balance-stake);
-  const totalPL=balance-Number($('start').value||3000);
-  $('levelName').textContent=`Level ${level+1} — ${levels[level]}%`;
-  $('stake').textContent=money(stake); $('balance').textContent=money(balance);
-  $('winBal').textContent=money(winBal); $('lossBal').textContent=money(lossBal);
-  $('totalPL').textContent=(totalPL>=0?'+':'')+money(totalPL);
-  $('totalPL').className=totalPL>=0?'plpos':'plneg';
-  $('tradeCount').textContent=trade;
-  $('winCount').textContent=wins;
-  $('lossCount').textContent=losses;
-  $('winRate').textContent=trade ? Math.round(wins/trade*100)+'%' : '0%';
-  $('levelsLeft').textContent=5-level;
-  $('levels').innerHTML=levels.map((p,i)=>`<div class="level ${i===level?'active':''}">L${i+1}<b>${p}%</b></div>`).join('');
-  $('history').innerHTML=history.map(h=>`<tr><td>${h.t}</td><td>L${h.l}</td><td>${money(h.start)}</td><td>${money(h.stake)}</td><td>${h.result}</td><td>${money(h.end)}</td><td>${money(h.next)}</td></tr>`).join('');
+ const payout=Math.max(0,Number($('payout').value)||96),stake=balance*levels[level]/100,winBal=balance+stake*payout/100,lossBal=Math.max(0,balance-stake),totalPL=balance-Number($('start').value||3000);
+ $('levelName').textContent=`Level ${level+1} — ${levels[level]}%`;$('stake').textContent=money(stake);$('balance').textContent=money(balance);$('winBal').textContent=money(winBal);$('lossBal').textContent=money(lossBal);
+ $('totalPL').textContent=(totalPL>=0?'+':'')+money(totalPL);$('totalPL').className=totalPL>=0?'plpos':'plneg';$('tradeCount').textContent=trade;$('winCount').textContent=wins;$('lossCount').textContent=losses;$('winRate').textContent=trade?Math.round(wins/trade*100)+'%':'0%';$('levelsLeft').textContent=5-level;
+ $('levels').innerHTML=levels.map((p,i)=>`<div class="level ${i===level?'active':''}">L${i+1}<b>${p}%</b></div>`).join('');
+ $('history').innerHTML=history.map(h=>`<tr><td>${h.t}</td><td>L${h.l}</td><td>${money(h.start)}</td><td>${money(h.stake)}</td><td>${h.result}</td><td>${money(h.end)}</td><td>${money(h.next)}</td></tr>`).join('');
+ updateCooldownUI();
+}
+function startCooldown(){cooldownUntil=Date.now()+300000;clearInterval(cooldownInterval);updateCooldownUI();cooldownInterval=setInterval(updateCooldownUI,250)}
+function updateCooldownUI(){
+ const remaining=Math.max(0,cooldownUntil-Date.now()),blocked=remaining>0;$('win').disabled=blocked;$('loss').disabled=blocked;
+ if(blocked){$('cooldown').classList.add('show');$('ready').classList.remove('show');const s=Math.ceil(remaining/1000);$('cooldownTimer').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+ else if(cooldownUntil){clearInterval(cooldownInterval);cooldownUntil=0;$('cooldown').classList.remove('show');$('ready').classList.add('show')}
+ else{$('cooldown').classList.remove('show');$('ready').classList.remove('show')}
 }
 function apply(result){
-  const payout=Math.max(0,Number($('payout').value)||96), startBal=balance, stake=startBal*levels[level]/100;
-  if(result==='WIN'){balance=startBal+stake*payout/100; level=0}
-  else {balance=Math.max(0,startBal-stake); level=Math.min(4,level+1)}
-  trade++; if(result === 'WIN') wins++;
-else losses++;
-  history.unshift({t:trade,l:result==='WIN'?1:Math.min(5,level+1),start:startBal,stake,result,end:balance,next:balance*levels[level]/100});
-  render();
+ if(Date.now()<cooldownUntil)return;
+ const payout=Math.max(0,Number($('payout').value)||96),startBal=balance,currentLevel=level,stake=startBal*levels[currentLevel]/100;
+ if(result==='WIN'){balance=startBal+stake*payout/100;level=0;wins++}else{balance=Math.max(0,startBal-stake);level=Math.min(4,currentLevel+1);losses++}
+ trade++;history.unshift({t:trade,l:currentLevel+1,start:startBal,stake,result,end:balance,next:balance*levels[level]/100});
+ if(result==='LOSS')startCooldown();render();
 }
-$('win').onclick=()=>apply('WIN'); $('loss').onclick=()=>apply('LOSS');
-$('reset').onclick=()=>{balance=Math.max(1,Number($('start').value)||3000);level=0;trade=0;history=[];render()};
-$('start').onchange=()=>{if(!trade){balance=Math.max(1,Number($('start').value)||3000);render()}};
-$('payout').oninput=render; render();
-
-let deferredPrompt=null;
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;$('installBox').hidden=false});
+$('win').onclick=()=>apply('WIN');$('loss').onclick=()=>apply('LOSS');
+$('reset').onclick=()=>{balance=Math.max(1,Number($('start').value)||3000);level=0;trade=0;history=[];wins=0;losses=0;cooldownUntil=0;clearInterval(cooldownInterval);render()};
+$('start').onchange=()=>{if(!trade){balance=Math.max(1,Number($('start').value)||3000);render()}};$('payout').oninput=render;render();
+let deferredPrompt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;$('installBox').hidden=false});
 $('install').onclick=async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('installBox').hidden=true};
-if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('service-worker.js'));
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('service-worker.js'));
 </script>
-</body>
-</html>
+</body></html>
