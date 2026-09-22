@@ -20,7 +20,7 @@ body{margin:0;background:#f3f4f6;color:#111827;font-family:system-ui,-apple-syst
 .field label{display:block;font-size:12px;font-weight:700;color:#6b7280;margin:0 0 6px}
 .field input{width:100%;height:46px;border:1px solid #d1d5db;border-radius:11px;padding:0 11px;font-size:16px;outline:0}
 .field input:focus{border-color:#111827}
-.levels{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.levels{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .level{border:1px solid #e5e7eb;border-radius:10px;text-align:center;padding:8px 3px;font-size:11px}
 .level b{display:block;font-size:16px;margin-top:2px}
 .active{background:#111827;color:white;border-color:#111827}
@@ -64,6 +64,7 @@ body{margin:0;background:#f3f4f6;color:#111827;font-family:system-ui,-apple-syst
 </head>
 <body>
 <main class="app">
+
 <header class="top">
 <h1>Wingo Risk Calculator</h1>
 <p>Level-based stake & balance tracker</p>
@@ -83,58 +84,32 @@ body{margin:0;background:#f3f4f6;color:#111827;font-family:system-ui,-apple-syst
 </section>
 
 <section class="card">
-<div class="label" style="margin-bottom:8px">4 LEVEL SYSTEM</div>
+<div class="label" style="margin-bottom:8px">5 LEVEL SYSTEM</div>
 <div class="levels" id="levels"></div>
 </section>
 
 <section class="card" aria-live="polite">
+
 <div class="muted">CURRENT LEVEL / NEXT STAKE</div>
-<div id="levelName" class="label" style="margin-top:4px">Level 1 — 3%</div>
-<div id="stake" class="big">₹90.00</div>
+<div id="levelName" class="label" style="margin-top:4px">Level 1 — 2%</div>
+<div id="stake" class="big">₹60.00</div>
 
 <div class="stats">
-<div class="stat">
-<span class="muted">Balance</span>
-<b id="balance">₹3,000.00</b>
-</div>
-<div class="stat">
-<span class="muted">If WIN</span>
-<b id="winBal">₹3,086.40</b>
-</div>
-<div class="stat">
-<span class="muted">If LOSS</span>
-<b id="lossBal">₹2,910.00</b>
-</div>
+<div class="stat"><span class="muted">Balance</span><b id="balance">₹3,000.00</b></div>
+<div class="stat"><span class="muted">If WIN</span><b id="winBal">₹3,057.60</b></div>
+<div class="stat"><span class="muted">If LOSS</span><b id="lossBal">₹2,940.00</b></div>
 </div>
 
 <div class="stats" style="margin-top:7px">
-<div class="stat">
-<span class="muted">Total P/L</span>
-<b id="totalPL">₹0.00</b>
-</div>
-<div class="stat">
-<span class="muted">Trades</span>
-<b id="tradeCount">0</b>
-</div>
-<div class="stat">
-<span class="muted">Levels Left</span>
-<b id="levelsLeft">4</b>
-</div>
+<div class="stat"><span class="muted">Total P/L</span><b id="totalPL">₹0.00</b></div>
+<div class="stat"><span class="muted">Trades</span><b id="tradeCount">0</b></div>
+<div class="stat"><span class="muted">Levels Left</span><b id="levelsLeft">5</b></div>
 </div>
 
 <div class="stats" style="margin-top:7px">
-<div class="stat">
-<span class="muted">Wins</span>
-<b id="winCount">0</b>
-</div>
-<div class="stat">
-<span class="muted">Losses</span>
-<b id="lossCount">0</b>
-</div>
-<div class="stat">
-<span class="muted">Win Rate</span>
-<b id="winRate">0%</b>
-</div>
+<div class="stat"><span class="muted">Wins</span><b id="winCount">0</b></div>
+<div class="stat"><span class="muted">Losses</span><b id="lossCount">0</b></div>
+<div class="stat"><span class="muted">Win Rate</span><b id="winRate">0%</b></div>
 </div>
 
 <div class="actions">
@@ -144,18 +119,20 @@ body{margin:0;background:#f3f4f6;color:#111827;font-family:system-ui,-apple-syst
 </div>
 
 <div id="cooldown" class="cooldown" aria-live="assertive">
-<strong>🔴 RED SIGNAL — TAKE A BREAK</strong>
-Do not trade for 5 minutes after this loss.
-<div class="timer" id="cooldownTimer">05:00</div>
+<strong id="cooldownTitle">🔴 RED SIGNAL — TAKE A BREAK</strong>
+<span id="cooldownMessage">Do not trade during the break.</span>
+<div class="timer" id="cooldownTimer">02:00</div>
 </div>
 
 <div id="ready" class="ready" aria-live="polite">
 🟢 COOLDOWN COMPLETE — You can continue.
 </div>
+
 </section>
 
 <section class="card">
 <div class="label" style="margin-bottom:9px">TRADE HISTORY</div>
+
 <div class="tablewrap">
 <table class="table">
 <thead>
@@ -175,8 +152,10 @@ Do not trade for 5 minutes after this loss.
 
 <div class="note">
 WIN resets to Level 1. LOSS moves to the next level.
-Levels: 3% → 6% → 12% → 25%.
-After every LOSS, a 5-minute cooldown blocks WIN/LOSS buttons.
+Levels: 2% → 4% → 8% → 16% → 32%.
+After WIN: 5-minute cooldown.
+After LOSS: 2-minute cooldown.
+Timer sound plays when cooldown finishes.
 This tool calculates stake sizes; it does not predict Wingo results.
 </div>
 </section>
@@ -192,17 +171,26 @@ Use the button below when your browser offers installation.
 </main>
 
 <script>
-// 4 LEVEL SYSTEM
-const levels=[3,6,12,25];
 
-let balance=3000,
-level=0,
-trade=0,
-history=[],
-wins=0,
-losses=0,
-cooldownUntil=0,
-cooldownInterval=null;
+// =============================
+// LEVEL SYSTEM
+// =============================
+
+const levels=[2,4,8,16,32];
+
+let balance=3000;
+let level=0;
+let trade=0;
+let history=[];
+let wins=0;
+let losses=0;
+let cooldownUntil=0;
+let cooldownInterval=null;
+let cooldownType='';
+
+// =============================
+// ELEMENTS
+// =============================
 
 const $=id=>document.getElementById(id);
 
@@ -210,6 +198,52 @@ const money=n=>'₹'+Number(n).toLocaleString('en-IN',{
 minimumFractionDigits:2,
 maximumFractionDigits:2
 });
+
+// =============================
+// SOUND SYSTEM
+// =============================
+
+let audioContext=null;
+
+function playSound(){
+
+try{
+
+if(!audioContext){
+
+audioContext=new (window.AudioContext||window.webkitAudioContext)();
+
+}
+
+if(audioContext.state==='suspended')audioContext.resume();
+
+const oscillator=audioContext.createOscillator();
+const gain=audioContext.createGain();
+
+oscillator.type='sine';
+oscillator.frequency.setValueAtTime(880,audioContext.currentTime);
+
+gain.gain.setValueAtTime(0.001,audioContext.currentTime);
+gain.gain.exponentialRampToValueAtTime(0.3,audioContext.currentTime+0.03);
+gain.gain.exponentialRampToValueAtTime(0.001,audioContext.currentTime+0.5);
+
+oscillator.connect(gain);
+gain.connect(audioContext.destination);
+
+oscillator.start();
+oscillator.stop(audioContext.currentTime+0.5);
+
+}catch(e){
+
+console.log('Sound unavailable',e);
+
+}
+
+}
+
+// =============================
+// RENDER
+// =============================
 
 function render(){
 
@@ -273,9 +307,17 @@ updateCooldownUI();
 
 }
 
-function startCooldown(){
+// =============================
+// START COOLDOWN
+// =============================
 
-cooldownUntil=Date.now()+300000;
+function startCooldown(type){
+
+cooldownType=type;
+
+const duration=type==='WIN'?300000:120000;
+
+cooldownUntil=Date.now()+duration;
 
 clearInterval(cooldownInterval);
 
@@ -284,6 +326,10 @@ updateCooldownUI();
 cooldownInterval=setInterval(updateCooldownUI,250);
 
 }
+
+// =============================
+// COOLDOWN UI
+// =============================
 
 function updateCooldownUI(){
 
@@ -301,6 +347,23 @@ $('cooldown').classList.add('show');
 
 $('ready').classList.remove('show');
 
+if(cooldownType==='WIN'){
+
+$('cooldownTitle').textContent='🟢 WIN — TAKE A BREAK';
+
+$('cooldownMessage').textContent=
+'Do not trade for 5 minutes after this WIN.';
+
+}else{
+
+$('cooldownTitle').textContent=
+'🔴 RED SIGNAL — TAKE A BREAK';
+
+$('cooldownMessage').textContent=
+'Do not trade for 2 minutes after this LOSS.';
+
+}
+
 const s=Math.ceil(remaining/1000);
 
 $('cooldownTimer').textContent=
@@ -313,7 +376,11 @@ else if(cooldownUntil){
 
 clearInterval(cooldownInterval);
 
+cooldownInterval=null;
+
 cooldownUntil=0;
+
+playSound();
 
 $('cooldown').classList.remove('show');
 
@@ -331,9 +398,26 @@ $('ready').classList.remove('show');
 
 }
 
+// =============================
+// APPLY TRADE
+// =============================
+
 function apply(result){
 
 if(Date.now()<cooldownUntil)return;
+
+// Initialize sound access after user interaction
+try{
+
+if(!audioContext){
+
+audioContext=new (window.AudioContext||window.webkitAudioContext)();
+
+}
+
+if(audioContext.state==='suspended')audioContext.resume();
+
+}catch(e){}
 
 const payout=Math.max(0,Number($('payout').value)||96);
 
@@ -351,9 +435,7 @@ level=0;
 
 wins++;
 
-}
-
-else{
+}else{
 
 balance=Math.max(0,startBal-stake);
 
@@ -366,6 +448,7 @@ losses++;
 trade++;
 
 history.unshift({
+
 t:trade,
 l:currentLevel+1,
 start:startBal,
@@ -373,13 +456,27 @@ stake,
 result,
 end:balance,
 next:balance*levels[level]/100
+
 });
 
-if(result==='LOSS')startCooldown();
+// Different cooldowns
+if(result==='WIN'){
+
+startCooldown('WIN');
+
+}else{
+
+startCooldown('LOSS');
+
+}
 
 render();
 
 }
+
+// =============================
+// BUTTONS
+// =============================
 
 $('win').onclick=()=>apply('WIN');
 
@@ -401,7 +498,11 @@ losses=0;
 
 cooldownUntil=0;
 
+cooldownType='';
+
 clearInterval(cooldownInterval);
+
+cooldownInterval=null;
 
 render();
 
@@ -423,7 +524,10 @@ $('payout').oninput=render;
 
 render();
 
-// Install App
+// =============================
+// INSTALL APP
+// =============================
+
 let deferredPrompt=null;
 
 window.addEventListener('beforeinstallprompt',e=>{
@@ -450,7 +554,10 @@ $('installBox').hidden=true;
 
 };
 
-// Service Worker
+// =============================
+// SERVICE WORKER
+// =============================
+
 if('serviceWorker' in navigator)
 
 window.addEventListener('load',()=>
